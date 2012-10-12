@@ -25,95 +25,105 @@ Optional: a local LAMP-stack for development (I prefer to work that way, but you
 How to use the TYPO3-installer?
 ===============
 
-# Create a project directory for your project on your development machine:
+- Create a project directory for your project on your development machine:
 mkdir <project-dir>
 cd <project-dir>
 
-# Initialize git:
+- Initialize git:
+
 git init
 
-# Include the TYPO3-installer as a git submodule:
+- Include the TYPO3-installer as a git submodule:
+
 git submodule add https://github.com/netcoop/typo3-installer.git installer
 
-# Create the required directory structure for the project:
+- Create the required directory structure for the project:
+
 cp -a installer/example-files/empty-project-tree/. .
 
-# => If you don't already have this, create a directory src OUTSIDE OF THIS PROJECT DIRECTORY but at the same level, containing the TYPO3 sources (core)
-# Inside the sources directory, create a symlink with the major version number to the latest version of that branch, e.g.:
+- => If you don't already have this, create a directory src OUTSIDE OF THIS PROJECT DIRECTORY but at the same level, containing the TYPO3 sources (core)
+- Inside the sources directory, create a symlink with the major version number to the latest version of that branch, e.g.:
+
 mkdir ../src
 cd ../src
 ln -s typo3_src-4.7.4 typo3_src-4.7
 cd <project-dir>
 
-# => Create a database and database user for your project
+- => Create a database and database user for your project
 
-# => Modify the settings in the files under config/localhost to fit your project and system (paths, database credentials, etc.)
-# Once that is done, you should be able to get the rest of your local installation ready using this command:
+- => Modify the settings in the files under config/localhost to fit your project and system (paths, database credentials, etc.)
+- Once that is done, you should be able to get the rest of your local installation ready using this command:
+
 ./installer/local-install.sh -e localhost
-# where localhost is the name of this configuration directory you use from the config directory
 
-# Your new empty local development site should now be up-and-running!
-# Commit your work, this is the starting point for all changes to this project:
+- where localhost is the name of this configuration directory you use from the config directory
+
+- Your new empty local development site should now be up-and-running!
+- Commit your work, this is the starting point for all changes to this project:
+
 git commit -am "Initial commit"
 
 
 Changing the TYPO3 main version
 ===============
 
-By default the installer now uses TYPO3 4.7. To change this to 4.6 or 4.5, just change the well known setting
-in datasets/0.0.0/files/typo3conf/localconf.php
+- By default the installer now uses TYPO3 4.7. To change this to 4.6 or 4.5, just change the well known setting in datasets/0.0.0/files/typo3conf/localconf.php
+
 $TYPO3_CONF_VARS['SYS']['compat_version'] = '4.7';
-and move the appropriate empty database file into the 0.0.0 dataset directory:
+
+- and move the appropriate empty database file into the 0.0.0 dataset directory:
+
 mv datasets/0.0.0/base_4.7.x.sql datasets/
 mv datasets/base_4.5.x.sql datasets/0.0.0/
 
-Once you have your local installation already running, then also adjust [compat_version] setting in the active localconf.php in
-html/typo3conf/localconf.php
-Do this by hand, not by using the install tool (because the comments added by the install tool currently break the create-symlinks.sh script).
+- Once you have your local installation already running, then also adjust [compat_version] setting in the active localconf.php in html/typo3conf/localconf.php
+- Do this by hand, not by using the install tool (because the comments added by the install tool currently break the create-symlinks.sh script).
 
 
 Set up SSH properties
 ===============
 
-# Now create a file in your local home directory for being able to use the public/private keys with Ant SSH and SCP
-# I'm not that happy about the passphrase file, but I don't know a better way, due to limitations of ant's ssh implementation
+- Now create a file in your local home directory for being able to use the public/private keys with Ant SSH and SCP
+- I'm not that happy about the passphrase file, but I don't know a better way, due to limitations of ant's ssh implementation
+
 echo -e "ssh.passphrase=<your-ssh-key-passphrase>\nssh.keyfile=\${user.home}/.ssh/id_rsa" > ~/.ssh.properties
 chmod 600 ~/.ssh.properties
-# Warning: this file should never be included in your project and/or pushed to a remote repository, as it contains your SSH passphrase!
 
-# If you use different SSH-keys for different environments, then you can choose to specify a different ssh.file.properties in the environment.properties.
-# This will override the file specified in project.properties (which will be used for all environments)
+- Warning: this file should never be included in your project and/or pushed to a remote repository, as it contains your SSH passphrase!
+
+- If you use different SSH-keys for different environments, then you can choose to specify a different ssh.file.properties in the environment.properties.
+- This will override the file specified in project.properties (which will be used for all environments)
 
 
 Hierarchy of properties files
 ===============
 
-The ant deployment script (build.xml) uses 3 files with file extension '.properties' to read the deployment settings from:
-- version.properties			(contains only version number and should also be readable by shell scripts)
-- environment.properties		(in config/<target-environment>/, this contains the settings for this environment)
-- project.properties			(in project root, contains project defaults for all environment)
-- ssh.file.properties			(in user home-dir or other relatively safe location, contains passphrase and location of private key file)
+- The ant deployment script (build.xml) uses 4 files with file extension '.properties' to read the deployment settings from:
 
-They are read in this sequence. Once a setting is set, it can not be changed (Ant does not override variables like you're used to in PHP etc.)
-Therefore, the first file has the highest priority. Specify the default settings for all environments in project.properties, then you can "override" them in environment.properties.
+1. version.properties		(contains only version number and should also be readable by shell scripts)
+2. environment.properties	(in config/<target-environment>/, this contains the settings for this environment)
+3. project.properties		(in project root, contains project defaults for all environment)
+4. ssh.file.properties		(in user home-dir or other relatively safe location, contains passphrase and location of private key file)
 
-version.properties should only be used for setting the version number. Increase it after every incremental deployment to an environment where the live-data is preserved.
+- They are read in this sequence. Once a setting is set, it can not be changed (Ant does not override variables like you're used to in PHP etc.) Therefore, the first file has the highest priority. Specify the default settings for all environments in project.properties, then you can "override" them in environment.properties.
+
+- version.properties should only be used for setting the version number. Increase it after every incremental deployment to an environment where the live-data is preserved.
 
 
 Deploy to target environments
 ===============
 
-# Adjust the configuration for each target environment under config/***
-# You can also freely add new target environments, you can also change the names of the targets as you wish.
+- Adjust the configuration for each target environment under config/***
+- You can also freely add new target environments, you can also change the names of the targets as you wish.
 
-# To perform a deployment, do:
+- To perform a deployment, do:
+
 ant deploy -Denvironment=test
 
-# where 'test' is the name of the target environment in the config directory.
-# This will transfer the necessary components (installer scripts, dataset if required and versioned files) using rsync, and run a number of scripts to apply the changes to the target environment.
-# File transfer using rsync ensures very fast deployment once a site has already been deployed before (only changes need to be transferred).
+- where 'test' is the name of the target environment in the config directory.
+- This will transfer the necessary components (installer scripts, dataset if required and versioned files) using rsync, and run a number of scripts to apply the changes to the target environment. File transfer using rsync ensures very fast deployment once a site has already been deployed before (only changes need to be transferred).
 
-# For advanced users: you can also override other Ant variables by specifying them on the command line.
+- For advanced users: you can also override other Ant variables by specifying them on the command line.
 
 
 Creating a dataset
@@ -131,6 +141,10 @@ using the specified dataset. This is useful for development and test-deployments
 unless you really want to deploy a new database and fileset and throw away all data on the production environment (normally you would only do this for the
 initial deployment of a new project, never for existing sites).
 
+There are 2 kinds of datasets:
+
+- versioned datasets (included in git) in directory datasets. These can be deployed automatically on every deployment.
+- local datasets (not in git) in directory datasetslocal. Use this when a dataset (e.g. from an existing project) is too big to practically stored in git. Make sure you copy this dataset to each server where you want to use it.
 
 Refresh your local installation
 ===============
@@ -143,47 +157,47 @@ Directory structure for a project:
 
 TODO: explanation of what is what
 
-> backup
-> config
-	> localhost
-	> test
-	> acceptation
-	> production
-> datasets
-	> 0.0.0
-		> files
-			> fileadmin
-			(....)
-		base_4.5.x.sql
-	base_4.6.x.sql
-	base_4.7.x.sql
-	cli_users.sql
-	cursor.sql
-	tx_devlog.sql
-> datasetslocal
-> deltas
-	> 0.0.1
-		> files
-			> fileadmin
-			(....)
-		updates.sql
-		updates.sh
-> html
-	> local
-		> config
-		> log
-		.htaccess
-	> typo3conf
-		> ext
-			> t3deploy
-> log
-> worktemp
-> .git
-build.xml
-project.properties
-version.properties
-.gitignore
-.rsync-exclude
+- backup
+- config
+	- localhost
+	- test
+	- acceptation
+	- production
+- datasets
+	- 0.0.0
+		- files
+			- fileadmin
+			1. (....)
+		1. base_4.5.x.sql
+	1. base_4.6.x.sql
+	2. base_4.7.x.sql
+	3. cli_users.sql
+	4. cursor.sql
+	5. tx_devlog.sql
+- datasetslocal
+- deltas
+	- 0.0.1
+		- files
+			- fileadmin
+			1. (....)
+		1. updates.sql
+		2. updates.sh
+- html
+	- local
+		- config
+		- log
+		1. .htaccess
+	- typo3conf
+		- ext
+			- t3deploy
+- log
+- worktemp
+- .git
+1. build.xml
+2. project.properties
+3. version.properties
+4. .gitignore
+5. .rsync-exclude
 
 
 Using deltas
