@@ -1,0 +1,46 @@
+#
+# Installer skeleton
+#
+.data.version
+backup/
+build/
+datasetslocal/*
+dist/
+log/
+nbproject/
+worktemp/
+
+#
+# public_html directory
+#
+html/fileadmin/*
+html/local/config
+html/local/log/*
+html/typo3_src
+html/typo3conf/temp_*
+html/typo3conf/ENABLE_INSTALL_TOOL
+html/typo3conf/deprecation_*
+!html/typo3conf/ext/phpunit/PEAR/PHPUnit/Util/Log/
+html/typo3temp/*
+html/uploads/*
+
+#
+# Special files and directories
+#
+.buildpath
+.svn
+.project
+.settings
+*.log
+*.tar
+._*
+*~
+.~*
+*LCK
+.DS_store
+.grsync-exclude
+*.swp
+
+#
+# Project specific excludes:
+#

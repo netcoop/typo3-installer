@@ -1,0 +1,276 @@
+<project name="general-project" default="help" basedir="../.">
+
+	<target name="help">
+		<echo message="Ant usage:" />
+		<echo message="help                        - This message" />
+		<echo message="clean                       - clean the build and dist" />
+		<echo message="local-install               - Set up a working structure for development on the local system" />
+		<echo message="deploy                      - Build and deploy the project remotely to a specified environment ('test' by default)" />
+		<echo></echo>
+		<echo message="Usage examples:"/>
+		<echo message="==============================================================" />
+		<echo message="ant local-install -Denvironment=localhost" />
+		<echo message="ant deploy -Denvironment=test" />
+		<echo></echo>
+		<echo message="Property list overrides via the commandline -Dproperty=value" />
+		<echo message="Configuration settings:" />
+		<echo message="    environment             - dev,test,acceptatie,productie" />
+		<echo message="Connection settings: (Authorized_keys is default)" />
+		<echo message="    ssh.host                - hostname or ip-address" />
+		<echo message="    ssh.port                - ssh port" />
+		<echo message="    ssh.user                - user that will connect with the server" />
+		<echo message="    ssh.keyfile             - ssh-key file location" />
+		<echo message="    ssh.passphrase          - passphrase to connect with the server (Not needed by default)" />
+		<echo message="    ssh.password            - password to connect with the server" />
+		<echo message="Project settings:" />
+		<echo message="    project.name            - Project identifier" />
+		<echo message="    projectVersion          - Project version, made out of label, number, release, update" />
+		<echo message="    projectVersionNumber    - Project version number" />
+		<echo message="    projectVersionRelease   - Project version release" />
+		<echo message="    projectVersionUpdate    - Project version update" />
+		<echo message="Environment settings:" />
+		<echo message="    environment.project.path   - Project base directory on target environment" />
+		<echo message="    environment.typo3_src.path - Directory containing TYPO3 sources on target environment" />
+		<echo message="    environment.www_dir        - Public HTML dir (website root, inside project path)" />
+		<echo message="    environment.version.label  - Version no. label" />
+		<echo message="Deploy settings:" />
+		<echo message="    deploy.backup           - Backup the project current state (bool)" />
+		<echo message="    deploy.dataset          - Name and or version of the dataset to deploy" />
+		<echo message="    deploy.dataset.local    - Use a local dataset that should already be available on the target environment" />
+		<echo message="Local development environment settings:" />
+		<echo message="    localdev.www_dir        - www-dir on the local development machines" />
+	</target>
+
+	<target name="deploy" depends="get-properties">
+		<echo message="Releasing product version: ${projectVersion}" />
+		<antcall target="version"/>
+		<antcall target="rsync-installer"/>
+		<antcall target="rsync-dataset-base"/>
+		<antcall target="rsync-dataset"/>
+		<antcall target="rsync-deltas"/>
+		<antcall target="rsync-config"/>
+		<antcall target="rsync-version"/>
+		<antcall target="create-backup"/>
+		<antcall target="apply-dataset"/>
+		<antcall target="apply-symlinks"/>
+		<antcall target="rsync-files"/>
+		<antcall target="apply-deltas"/>
+		<antcall target="apply-permissions"/>
+	</target>
+
+	<target name="local-install" depends="apply-config">
+		<echo message="Set up a working structure for development on the local system" />
+		<echo message="    Using configuration in ${localdev.www_dir}/local/config" />
+		<property name="configuration.path" value="${localdev.www_dir}/local/config" />
+		<antcall target="get-properties"/>
+		<exec dir="." executable="/bin/bash" failonerror="true">
+			<arg line="installer/local-install.sh -n ${deploy.dataset}" />
+		</exec>
+	</target>
+
+	<target name="apply-config">
+		<exec dir="." executable="/bin/bash" failonerror="true">
+			<arg line="installer/apply-config.sh ${environment}" />
+		</exec>
+	</target>
+
+	<target name="get-properties">
+		<property environment="env" description="System environment variables (including those set by Jenky Jenkins)"/>
+		<!-- set the build number based on environment variable, otherwise blank -->
+		<condition property="project.buildNumber" value="${env.BUILD_NUMBER}" else="dev">
+			<isset property="env.BUILD_NUMBER" />
+		</condition>
+
+		<condition property="environment" value="test">
+			<not>
+				<isset property="environment"/>
+			</not>
+		</condition>
+		<condition property="localdev.www_dir" value="html">
+			<not>
+				<isset property="localdev.www_dir"/>
+			</not>
+		</condition>
+		<condition property="configuration.path" value="config/${environment}">
+			<not>
+				<isset property="configuration.path"/>
+			</not>
+		</condition>
+		<property file="version.properties" description="Project version number."  />
+		<property file="${configuration.path}/environment.properties" description="Environment-specific configuration overrides." />
+		<property file="project.properties" description="Project configuration properties and default build configuration."  />
+		<property file="${ssh.properties.file}" />
+
+		<condition property="deploy.dataset.transfer">
+			<and>
+				<isset property="deploy.dataset" />
+				<or>
+				<not>
+					<isset property="deploy.dataset.local" />
+				</not>
+				<not>
+					<equals arg1="${deploy.dataset.local}" arg2="1" />
+				</not>
+				</or>
+			</and>
+		</condition>
+
+		<echo></echo>
+		<echo message="================================" />
+		<echo message="    project.name = ${project.name}" />
+		<echo message="================================" />
+		<echo></echo>
+		<echo message="SSH properties:" />
+		<echo message="    ssh.user = ${ssh.user}" />
+		<echo message="    ssh.host = ${ssh.host}" />
+		<echo message="    ssh.port = ${ssh.port}" />
+		<echo message="    ssh.keyfile = ${ssh.keyfile}" />
+		<echo message="    ssh.properties.file = ${ssh.properties.file}" />
+		<echo message="Environment properties:" />
+		<echo message="    environment.project.path = ${environment.project.path}" />
+		<echo message="    environment.www_dir = ${environment.www_dir}" />
+		<echo message="Deploy properties:" />
+		<echo message="    deploy.dataset = ${deploy.dataset}" />
+		<echo message="    deploy.dataset.transfer = ${deploy.dataset.transfer}" />
+		<echo message="    deploy.dataset.local = ${deploy.dataset.local}" />
+	</target>
+
+	<target name="version">
+		<delete file="${localdev.www_dir}/local/constants-version.ts"/>
+		<copy file="${localdev.www_dir}/typo3conf/ext/t3site/Configuration/TypoScript/constants-version.ts" todir="${localdev.www_dir}/local"/>
+		<replace file="${localdev.www_dir}/local/constants-version.ts" value="defaultvalue" propertyFile="version.properties">
+			<replacefilter token="@versionLabel@"			property="projectVersionLabel"/>
+			<replacefilter token="@versionNumber@"		property="projectVersionNumber"/>
+			<replacefilter token="@versionRelease@"		property="projectVersionRelease"/>
+			<replacefilter token="@versionUpdate@"		property="projectVersionUpdate"/>
+			<replacefilter token="@versionBuild@"			value="${project.buildNumber}"/>
+		</replace>
+		<property name="project.version" value="${projectVersionNumber}.${projectVersionRelease}.${projectVersionUpdate}"/>
+	</target>
+
+	<target name="rsync">
+		<echo message="rsync ${args} ${from} --> ${to}" />
+		<exec dir="." executable="rsync" failonerror="true">
+			<!--
+				relevant rsync options:
+				 -a : archive mode; equals -rlptgoD (no -H,-A,-X)
+					-r : recursive
+					-l : preserve symlinks
+					-p : preserve permissions
+					-t : preserve modification times
+					-g : preserve group
+					-o : preserve owner
+					-D : same as - -devices - -specials
+				 -e (ssh)
+				 -v (verbose)
+				 -z (compress during transfer)
+				 -H (preserve hard links)
+				 - -exclude='pattern'
+				 - -exclude-from (=file)
+				 - -delete
+				 - -force (delete directories even if not empty)
+			-->
+			<arg line="-av -e 'ssh -p ${ssh.port} -i ${ssh.keyfile}' ${from} ${ssh.user}@${ssh.host}:${environment.project.path}/${to} ${args}" />
+		</exec>
+	</target>
+
+	<target name="rsync-installer">
+		<antcall target="rsync">
+			<param name="from" value="installer/" />
+			<param name="to" value="installer/" />
+			<param name="args" value="--exclude='example-files' --exclude='README.md' --exclude-from='.rsync-exclude' --delete --force" />
+		</antcall>
+		<antcall target="rsync">
+			<param name="from" value=".rsync-exclude" />
+			<param name="to" value="." />
+			<param name="args" value="" />
+		</antcall>
+	</target>
+
+	<target name="rsync-dataset-base">
+		<!-- First create dir datasets in project.path -->
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path} &amp;&amp; mkdir -p datasets" />
+		<!-- Then transfer base special sql files, dataset (0.0.0) and selected dataset -->
+		<scp remotetodir="${ssh.user}@${ssh.host}:${environment.project.path}/datasets" port="${ssh.port}" keyfile="${ssh.keyfile}" passphrase="${ssh.passphrase}" trust="true" verbose="false" >
+			<fileset dir="datasets">
+				<include name="**.sql" />
+			</fileset>
+		</scp>
+		<antcall target="rsync">
+			<param name="from" value="datasets/0.0.0/" />
+			<param name="to" value="datasets/0.0.0/" />
+			<param name="args" value="--delete --force" />
+		</antcall>
+	</target>
+
+	<target name="rsync-dataset" if="deploy.dataset.transfer">
+		<antcall target="rsync">
+			<param name="from" value="datasets/${deploy.dataset}/" />
+			<param name="to" value="datasets/${deploy.dataset}/" />
+			<param name="args" value="--delete --force" />
+		</antcall>
+	</target>
+
+
+	<target name="rsync-deltas">
+		<antcall target="rsync">
+			<param name="from" value="deltas/" />
+			<param name="to" value="deltas/" />
+			<param name="args" value="--delete --force" />
+		</antcall>
+	</target>
+
+	<target name="rsync-config">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path} &amp;&amp; mkdir -p ${environment.www_dir}/local/config/" />
+		<antcall target="rsync">
+			<param name="from" value="config/${environment}/" />
+			<param name="to" value="${environment.www_dir}/local/config/" />
+			<param name="args" value="--exclude='environment.properties' --exclude-from='.rsync-exclude'" />
+		</antcall>
+	</target>
+
+	<target name="rsync-version">
+		<antcall target="rsync">
+			<param name="from" value="${localdev.www_dir}/local/constants-version.ts" />
+			<param name="to" value="${environment.www_dir}/local/constants-version.ts" />
+			<param name="args" value="" />
+		</antcall>
+	</target>
+
+	<target name="create-backup" if="deploy.backup">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="if [ -e .profile ] ; then . .profile ; fi &amp;&amp; cd ${environment.project.path} &amp;&amp; ./installer/create-backup.sh -f ${project.name} -w ${environment.www_dir}" />
+			<!-- .profile makes sure the environment variables get set, which doesn't happen automatically when using sshexec -->
+	</target>
+
+	<target name="apply-dataset" if="deploy.dataset">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path} &amp;&amp; ./installer/apply-dataset.sh -v ${deploy.dataset} -w ${environment.www_dir}" />
+	</target>
+
+	<target name="rsync-files">
+		<antcall target="rsync">
+			<param name="from" value="${localdev.www_dir}/" />
+			<param name="to" value="${environment.www_dir}/" />
+			<param name="args" value="--exclude-from='.rsync-exclude' --delete --force" />
+		</antcall>
+	</target>
+
+	<target name="apply-symlinks">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path} &amp;&amp; ./installer/apply-symlinks.sh -s ${environment.typo3_src.path} -w ${environment.www_dir}" />
+	</target>
+
+	<target name="apply-deltas">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path} &amp;&amp; ./installer/apply-deltas.sh -i -w ${environment.www_dir}" />
+	</target>
+
+	<target name="apply-permissions">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path} &amp;&amp; ./installer/apply-permissions.sh -w ${environment.www_dir}" />
+	</target>
+
+</project>

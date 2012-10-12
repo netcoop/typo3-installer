@@ -1,0 +1,27 @@
+apply-config.sh
+	# Apply environment configuration
+	apply-config.sh <config-dir> [<project_base_dir>]
+
+apply-dataset.sh
+	# Apply dataset: deprecated
+
+apply-directory-structure.sh
+	# Create essential non-versioned directories if they do not exist yet
+
+apply-initial-database.sh
+
+
+apply-permissions.sh
+apply-symlinks.sh
+apply-deltas.sh
+build.xml
+create-backup.sh
+create-dataset.sh
+get-db-config.sh
+install.sh
+local-install.sh
+phpunit.xml
+remote-install.sh
+replace-local-database.sh
+restore-backup.sh
+
