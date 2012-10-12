@@ -14,6 +14,9 @@ $typo_db_extTableDef_script = 'extTables.php';
 
 ## INSTALL SCRIPT EDIT POINT TOKEN - all lines after this points may be changed by the install script!
 
+// Make sure there is no comment after the [compat_version] line!
 $TYPO3_CONF_VARS['SYS']['compat_version'] = '4.7';
 
+// Include the settings and overrides for this specific environment - always put this line at the bottom of this file
+@include(PATH_site.'local/config/localsettings.php');
 ?>
