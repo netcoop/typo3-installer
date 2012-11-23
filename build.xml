@@ -52,8 +52,8 @@
 		<antcall target="rsync-version"/>
 		<antcall target="create-backup"/>
 		<antcall target="apply-dataset"/>
-		<antcall target="apply-symlinks"/>
 		<antcall target="rsync-files"/>
+		<antcall target="apply-symlinks"/>
 		<antcall target="apply-deltas"/>
 		<antcall target="apply-permissions"/>
 	</target>
@@ -135,7 +135,13 @@
 		<echo message="    deploy.dataset.local = ${deploy.dataset.local}" />
 	</target>
 
-	<target name="version">
+	<!-- Check if constant-version.ts file exists -->
+	<target name="check-constants-version-file">
+		<available file="${localdev.www_dir}/typo3conf/ext/t3site/Configuration/TypoScript/constants-version.ts" property="constants-version.present"/>
+	</target>
+
+	<!-- Run this target only if constant-version.ts file exists -->
+	<target name="version" depends="check-constants-version-file" if="constants-version.present">
 		<delete file="${localdev.www_dir}/local/constants-version.ts"/>
 		<copy file="${localdev.www_dir}/typo3conf/ext/t3site/Configuration/TypoScript/constants-version.ts" todir="${localdev.www_dir}/local"/>
 		<replace file="${localdev.www_dir}/local/constants-version.ts" value="defaultvalue" propertyFile="version.properties">
@@ -231,7 +237,8 @@
 		</antcall>
 	</target>
 
-	<target name="rsync-version">
+	<!-- Run this target only if constant-version.ts file exists -->
+	<target name="rsync-version" depends="check-constants-version-file" if="constants-version.present">
 		<antcall target="rsync">
 			<param name="from" value="${localdev.www_dir}/local/constants-version.ts" />
 			<param name="to" value="${environment.www_dir}/local/constants-version.ts" />

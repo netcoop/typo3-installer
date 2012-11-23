@@ -272,7 +272,7 @@ fi
 
 echo "$scriptname: ---------------------------------------------------------------------"
 
-if [ "$do_files" -eq "1" ]; then
+if [ "$do_files" -eq "11" ]; then
 	echo "$scriptname: Set file permissions according to configuration"
 	cd $project_base_dir
 	. $scriptdir/apply-permissions.sh -c $target_config_file -w $www_dir

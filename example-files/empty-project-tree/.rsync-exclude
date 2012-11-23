@@ -4,6 +4,7 @@
 .project
 .settings
 nbproject
+stats
 fileadmin/*
 local/config
 local/log/*
