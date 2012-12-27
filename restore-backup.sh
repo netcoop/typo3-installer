@@ -11,7 +11,6 @@ usage()
 	echo ""
 	echo "Usage: $scriptname -d<name>"
 	echo "	-b <dir>  : specify project base <dir>"
-	echo "	-c <file> : specify config <file>"
 	echo "	-v <version> : version number of the backup to use for this dataset"
 	echo "		<version> can be 2, 2.0 or 2.0.1.3 - the latest available backup of this version is used"
 	echo "	-f		: only copy files"
@@ -80,7 +79,6 @@ apply_dataset()
 			done
 
 			# Import unpacked sql files
-#echo "process sqltemp: "
 			cd sqltemp
 
 			for sqlfile in *.sql
@@ -140,7 +138,6 @@ scriptname=$(basename $0)
 scriptdir=$(dirname $0)
 set_project_dir
 data_version_file=$project_base_dir/.data.version
-target_config_file=$project_base_dir/html/local/config/localsettings.php
 backup_dir=$project_base_dir/backup
 www_dir="html"
 
@@ -148,7 +145,7 @@ do_files=1
 do_database=1
 do_scripts=1
 
-args=`getopt b:c:v: $*`
+args=`getopt b:v: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
@@ -166,10 +163,6 @@ do
 	in
 		-b)
 			project_base_dir="$2";
-			shift;
-			shift;;
-		-c)
-			target_config_file="$2";
 			shift;
 			shift;;
 		-f)
@@ -201,11 +194,7 @@ do
 	esac
 done
 
-if [ -z $target_config_file ] ; then
-	target_config_file=${project_base_dir}/${www_dir}/local/config/localsettings.php
-fi
-
-. $scriptdir/get-db-config.sh -c $target_config_file
+. $scriptdir/get-db-config.sh
 
 
 # Determine latest backup:

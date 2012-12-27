@@ -7,7 +7,6 @@ usage()
 	echo "	-v <version>	: apply dataset <version>"
 	echo "	-n <name>	: apply dataset <name>"
 	echo "	-b <dir>	: specify project base <dir> ($project_base_dir)"
-	echo "	-c <file>	: specify config <file> ($target_config_file)"
 	echo "	-w <dirname>	: specify name of www directorybackup <dirname> ($www_dir)"
 	echo "	-f		: only copy files"
 	echo "	-d		: only import database"
@@ -85,7 +84,6 @@ apply_dataset()
 			done
 
 			# Import unpacked sql files
-#echo "process sqltemp: "
 			cd sqltemp
 			
 			for sqlfile in *.sql
@@ -149,7 +147,7 @@ do_files=1
 do_database=1
 do_scripts=1
 
-args=`getopt fdsv:n:b:c:w: $*`
+args=`getopt fdsv:n:b:w: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
@@ -177,10 +175,6 @@ do
 			project_base_dir="$2";
 			shift;
 			shift;;
-		-c)
-			target_config_file="$2";
-			shift;
-			shift;;
 		-f)
 			do_files=1;
 			do_database=0;
@@ -206,11 +200,7 @@ do
 	esac
 done
 
-if [ -z $target_config_file ] ; then
-	target_config_file=${project_base_dir}/${www_dir}/local/config/localsettings.php
-fi
-
-. $scriptdir/get-db-config.sh -c $target_config_file
+. $scriptdir/get-db-config.sh
 
 cd "$project_base_dir"
 mkdir -p datasets datasetslocal
@@ -275,7 +265,7 @@ echo "$scriptname: -------------------------------------------------------------
 if [ "$do_files" -eq "11" ]; then
 	echo "$scriptname: Set file permissions according to configuration"
 	cd $project_base_dir
-	. $scriptdir/apply-permissions.sh -c $target_config_file -w $www_dir
+	. $scriptdir/apply-permissions.sh -w $www_dir
 fi
 
 echo "$scriptname: Done"

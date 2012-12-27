@@ -1,28 +1,28 @@
 #
 # Installer skeleton
 #
-.data.version
-backup/
-build/
-datasetslocal/*
-dist/
-log/
+/.data.version
+.idea/
+/backup/
+/build/
+/datasetslocal/*
+/dist/
+/log/
 nbproject/
-worktemp/
+/worktemp/
 
 #
 # public_html directory
 #
-html/fileadmin/*
-html/local/config
-html/local/log/*
-html/typo3_src
-html/typo3conf/temp_*
-html/typo3conf/ENABLE_INSTALL_TOOL
-html/typo3conf/deprecation_*
-!html/typo3conf/ext/phpunit/PEAR/PHPUnit/Util/Log/
-html/typo3temp/*
-html/uploads/*
+/html/fileadmin/*
+/html/local/config
+/html/local/log/*
+/html/typo3_src
+/html/typo3conf/temp_*
+/html/typo3conf/ENABLE_INSTALL_TOOL
+/html/typo3conf/deprecation_*
+/html/typo3temp/*
+/html/uploads/*
 
 #
 # Special files and directories

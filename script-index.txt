@@ -18,7 +18,6 @@ build.xml
 create-backup.sh
 create-dataset.sh
 get-db-config.sh
-install.sh
 local-install.sh
 phpunit.xml
 remote-install.sh

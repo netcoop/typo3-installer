@@ -5,7 +5,6 @@ usage()
 {
 	echo "Usage: $scriptname"
 	echo "	-b <dir>  : specify project base <dir> ($project_base_dir)"
-	echo "	-c <file> : specify config <file> ($target_config_file)"
 	echo "	-f <name> : specify backup <name> ($backup_name)"
 	echo "	-w <dirname> : specify name of www directorybackup <dirname> ($www_dir)"
 }
@@ -28,7 +27,7 @@ scriptdir=$(dirname $0)
 set_project_dir
 www_dir="html"
 
-args=`getopt b:c:f:w: $*`
+args=`getopt b:f:w: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
@@ -49,10 +48,6 @@ do
 			project_base_dir="$2";
 			shift;
 			shift;;
-		-c)
-			target_config_file="$2";
-			shift;
-			shift;;
 		-f)
 			backup_name="$2";
 			shift;
@@ -67,15 +62,8 @@ do
 	esac
 done
 
-if [ -z $target_config_file ] ; then
-	target_config_file=${project_base_dir}/${www_dir}/local/config/localsettings.php
-fi
-if [ ! -e $target_config_file ] ; then
-	target_config_file=${project_base_dir}/${www_dir}/typo3conf/localconf.php
-fi
-
 # Get DB properties
-. $scriptdir/get-db-config.sh -c $target_config_file
+. $scriptdir/get-db-config.sh
 
 # Read value for $projectVersion from file
 if [ -e .data.version ]; then

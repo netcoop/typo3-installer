@@ -1,7 +1,7 @@
 #!/bin/bash
 binDir=/usr/bin/
 
-set_project_dir()
+function set_project_dir()
 {
 	tmp=`pwd`
 	cd $scriptdir/..
@@ -9,15 +9,10 @@ set_project_dir()
 	cd $tmp
 }
 
-get_version_config()
+function get_version_config()
 {
-	if [ ! -e $target_localconf_file ]; then
-		echo "$scriptname: ERROR: No config in $1. Aborting"
-		exit 1
-	fi
-
-	export target_version=`grep '^ *\$TYPO3_CONF_VARS\[.SYS.\]\[.compat_version.\]' $target_localconf_file | sed -e 's/^ *\$TYPO3_CONF_VARS\[.SYS.\]\[.compat_version.\] *= *\(.*\).*;$/\1/' | tr -d "'"`
-	echo "$scriptname: TYPO3 version (as set in $target_localconf_file) = $target_version"
+	export target_version=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} SYS compat_version`
+	echo "$scriptname: TYPO3 version (as set in TYPO3 local configuration file) = $target_version"
 }
 
 # Usage: create_symlink <target> <link>
@@ -57,7 +52,7 @@ set_project_dir
 www_dir="html"
 typo3_src_path="../../src"
 
-args=`getopt b:c:s:w: $*`
+args=`getopt b:s:w: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
@@ -77,11 +72,6 @@ do
 			project_base_dir="$2";
 			shift;
 			shift;;
-		-c)
-			target_localconf_file="$2";
-			echo "Configuration: $target_localconf_file"
-			shift;
-			shift;;
 		-s)
 			typo3_src_path="$2";
 			shift;
@@ -96,15 +86,17 @@ do
 	esac
 done
 
-if [ -z $target_localconf_file ] ; then
-	target_localconf_file=${project_base_dir}/${www_dir}/typo3conf/localconf.php
-fi
-
 echo "$scriptname: Create TYPO3 symlinks if necessary in $project_base_dir/$www_dir"
 
-get_version_config $target_localconf_file
+get_version_config
 
 cd $project_base_dir/${www_dir}
+
+if [ ${version:0:1} -ge "6" ]; then
+	cd typo3conf
+	update_symlink ../local/config/AdditionalConfiguration.php AdditionalConfiguration.php
+	cd ..
+fi
 
 update_symlink $typo3_src_path/typo3_src-$target_version typo3_src
 create_symlink typo3_src/typo3 typo3

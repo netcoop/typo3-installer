@@ -28,7 +28,7 @@ scriptdir=$(dirname $0)
 set_project_dir
 datasetname=""
 
-args=`getopt e:v:n:b: $*`
+args=`getopt e:n: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]

@@ -5,7 +5,6 @@ usage()
 {
 	echo "Usage: $scriptname"
 	echo "	-b <dir>  : specify project base <dir> ($project_base_dir)"
-	echo "	-c <file> : specify config <file> ($target_config_file)"
 	echo "	-w <dirname> : specify name of www directorybackup <dirname> ($www_dir)"
 }
 
@@ -21,7 +20,7 @@ scriptname=$(basename $0)
 scriptdir=$(dirname $0)
 set_project_dir
 www_dir="html"
-args=`getopt c:b:w: $*`
+args=`getopt b:w: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
@@ -41,11 +40,6 @@ do
 			project_base_dir="$2";
 			shift;
 			shift;;
-		-c)
-			target_config_file="$2";
-			echo "Configuration: $target_config_file"
-			shift;
-			shift;;
 		-w)
 			www_dir="$2";
 			shift;
@@ -56,12 +50,8 @@ do
 	esac
 done
 
-if [ -z $target_config_file ] ; then
-	target_config_file=${project_base_dir}/${www_dir}/local/config/localsettings.php
-fi
-
 # Get dbconfig only for getting $target_apache_user_group
-. $scriptdir/get-db-config.sh -c $target_config_file
+. $scriptdir/get-db-config.sh
 
 echo "$scriptname: Set permissions, leave x-bit alone"
 echo "$scriptname: Allow apache to write in certain TYPO3-directories and set sticky bit on directories"

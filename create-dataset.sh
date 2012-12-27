@@ -14,7 +14,6 @@ usage()
 	echo ""
 	echo "Usage: $scriptname -d<name>"
 	echo "	-b <dir>  : specify project base <dir>"
-	echo "	-c <file> : specify config <file>"
 	echo "	-n <name> : create dataset with <name>"
 	echo "	-g  : create global dataset in directory datasets"
 	echo "	-v <version> : version number of the backup to use for this dataset"
@@ -37,14 +36,13 @@ which gnutar > /dev/null 2>&1 && tar=`which gnutar`
 scriptname=$(basename $0)
 scriptdir=$(dirname $0)
 set_project_dir
-target_config_file=$project_base_dir/html/local/config/localsettings.php
 backup_dir=$project_base_dir/backup
 
 #default values for command line settings
 global_dataset=0
 dataset_name="dataset"
 
-args=`getopt gb:c:n:v: $*`
+args=`getopt gb:n:v: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
@@ -62,10 +60,6 @@ do
 	in
 		-b)
 			project_base_dir="$2";
-			shift;
-			shift;;
-		-c)
-			target_config_file="$2";
 			shift;
 			shift;;
 		-n)

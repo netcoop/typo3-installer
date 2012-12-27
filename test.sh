@@ -31,7 +31,4 @@ done
 
 echo -e ""
 
-cd ~/www/bris.nl/datasetslocal/0.0.0.live
-find * -maxdepth 0 -type f -iname "*.files.tar.gz" -exec echo {} \;
-
 #lib_error Bla
