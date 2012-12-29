@@ -51,7 +51,7 @@ do
 done
 
 # Get dbconfig only for getting $target_apache_user_group
-. $scriptdir/get-db-config.sh
+. $scriptdir/get-db-config.sh -w $www_dir
 
 echo "$scriptname: Set permissions, leave x-bit alone"
 echo "$scriptname: Allow apache to write in certain TYPO3-directories and set sticky bit on directories"

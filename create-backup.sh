@@ -63,7 +63,7 @@ do
 done
 
 # Get DB properties
-. $scriptdir/get-db-config.sh
+. $scriptdir/get-db-config.sh -w $www_dir
 
 # Read value for $projectVersion from file
 if [ -e .data.version ]; then

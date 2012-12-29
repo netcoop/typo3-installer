@@ -142,7 +142,7 @@ find $project_base_dir/${www_dir}/typo3temp -type f -exec rm -f '{}' +
 # Set MySQL Acces properties
 #
 echo -e "\n\n$scriptname: Get DB parameters:"
-. $scriptdir/get-db-config.sh -b $project_base_dir
+. $scriptdir/get-db-config.sh -b $project_base_dir -w $www_dir
 
 echo -e "\n$scriptname: Check if CLI-user t3deploy already exists"
 

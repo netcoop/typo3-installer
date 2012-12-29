@@ -200,7 +200,7 @@ do
 	esac
 done
 
-. $scriptdir/get-db-config.sh
+. $scriptdir/get-db-config.sh -w $www_dir
 
 cd "$project_base_dir"
 mkdir -p datasets datasetslocal

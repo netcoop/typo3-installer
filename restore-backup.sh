@@ -194,7 +194,7 @@ do
 	esac
 done
 
-. $scriptdir/get-db-config.sh
+. $scriptdir/get-db-config.sh -w $www_dir
 
 
 # Determine latest backup:
