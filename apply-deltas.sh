@@ -118,7 +118,7 @@ if [ ! -e $data_version_file ] ; then
 		echo "$initial_version" > "$data_version_file"
 		echo "$scriptname: $data_version_file set to $initial_version"
 	else
-		# The previous version of this script used .db.version for recording the 
+		# The previous version of this script used .db.version for recording the
 		# data version.
 		mv $old_data_version_file $data_version_file
 	fi
@@ -164,9 +164,13 @@ if [ -e $domain_record_file ] ; then
 	mysql_import $domain_record_file
 fi
 
-echo -e "\n$scriptname: t3deploy - perform TCA database updates:\n"
-php $project_base_dir/${www_dir}/typo3/cli_dispatch.phpsh t3deploy database updateStructure --execute --allowkeymodifications
-if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to perform TCA database updates. Installation incomplete"; exit 1; fi
+COUNTER=0
+while [  $COUNTER -lt 1 ]; do
+	echo -e "\n$scriptname: t3deploy - perform TCA database updates, round [$COUNTER]:\n"
+	php $project_base_dir/${www_dir}/typo3/cli_dispatch.phpsh t3deploy database updateStructure --execute --allowkeymodifications
+	if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to perform TCA database updates. Installation incomplete"; exit 1; fi
+	let COUNTER=COUNTER+1
+done
 
 # Apply SQL Patches to Database for every available SQL patch
 

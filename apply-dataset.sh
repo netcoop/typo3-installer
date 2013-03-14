@@ -85,7 +85,7 @@ apply_dataset()
 
 			# Import unpacked sql files
 			cd sqltemp
-			
+
 			for sqlfile in *.sql
 			do
 				if [ ! "$sqlfile" == "*.sql"  ] ; then
@@ -268,6 +268,7 @@ if [ "$do_files" -eq "11" ]; then
 	. $scriptdir/apply-permissions.sh -w $www_dir
 fi
 
+cd $project_base_dir
 echo "$scriptname: Done"
 echo
 

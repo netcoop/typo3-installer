@@ -12,6 +12,7 @@
 if (php_sapi_name() != 'cli') {
 	die();
 }
+define('TYPO3_MODE', TRUE);
 
 global $TYPO3_CONF_VARS;
 
@@ -22,11 +23,13 @@ if (isset($argv[1])) {
 
 		if (file_exists($webroot . '/typo3conf/LocalConfiguration.php')) {
 			// TYPO3 version >= 6.0
+
 			$GLOBALS['TYPO3_CONF_VARS'] = require($webroot . '/typo3conf/LocalConfiguration.php');
+
 			@include($webroot . '/typo3conf/AdditionalConfiguration.php');
 		} elseif (file_exists($webroot . '/typo3conf/localconf.php')) {
 			// TYPO3 version <= 4.7.x
-			require($webroot . '/typo3conf/localconf.php');
+			include($webroot . '/typo3conf/localconf.php');
 		}
 
 		// If arguments 2 and 3 are set, return value from TYPO3_CONF_VARS array

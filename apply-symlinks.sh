@@ -92,7 +92,7 @@ get_version_config
 
 cd $project_base_dir/${www_dir}
 
-if [ "${version:0:1}" -ge "6" ]; then
+if [ "${target_version:0:1}" -ge "6" ]; then
 	cd typo3conf
 	update_symlink ../local/config/AdditionalConfiguration.php AdditionalConfiguration.php
 	cd ..
