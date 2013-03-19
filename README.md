@@ -12,6 +12,8 @@ Requirements:
 - a development machine running Linux or Mac OSX (it might work on Windows in a cygwin or similar environment, but never tested, don't count on it)
 - ant (http://ant.apache.org/) on ubuntu or debian: apt-get install ant
 - ant jsch (http://www.jcraft.com/jsch/) I installed it manually, see dir example-files/ant, but maybe apt-get install libjsch-java will do
+	Manual install, on Linux or MAC OSX:
+	Copy the files ant-jsch-x.x.x.jar and jsch-x.x.x.jar from example-files/ant to ~/.ant/lib/ (create the directories if they don't exist)
 - git (http://git-scm.com/) apt-get install git
 - ssh with public/private key authentication for connecting to the servers you need to connect to (FTP is not supported)
 - rsync (http://rsync.samba.org/) apt-get install rsync, required on your development machine and/or your Jenkins server, and all servers you want to deploy to
