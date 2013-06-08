@@ -18,17 +18,17 @@ set_project_dir()
 
 get_db_config()
 {
-	if [ -e ${project_base_dir}/${www_dir}/typo3conf/LocalConfiguration.php ]; then
+	if [ -e ${project_base_dir}/${www_dir}/typo3conf/LocalConfiguration.php ] || [ -e ${project_base_dir}/${www_dir}/local/config/AdditionalConfiguration.php ]; then
 		# TYPO3 version >= 6
-		echo "$scriptname: Retrieving settings from typo3conf/LocalConfiguration.php (TYPO3 version >= 6.0)"
+		echo "$scriptname: Retrieving settings from typo3conf/LocalConfiguration.php and/or AdditionalConfiguration.php (TYPO3 version >= 6.0)"
 		export target_username=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} DB username`
 		export target_password=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} DB password`
 		export target_host_with_port=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} DB host`
 		export target_database=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} DB database`
 
-	elif [ -e ${project_base_dir}/${www_dir}/typo3conf/localconf.php ]; then
+	elif [ -e ${project_base_dir}/${www_dir}/typo3conf/localconf.php ] || [ -e ${project_base_dir}/${www_dir}/local/config/localsettings.php ]; then
 		# TYPO3 version <= 4.7.x
-		echo "$scriptname: Retrieving settings from typo3conf/localconf.php (TYPO3 version <= 4.7.x)"
+		echo "$scriptname: Retrieving settings from typo3conf/localconf.php and/or localsettings.php (TYPO3 version <= 4.7.x)"
 		export target_username=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} typo_db_username`
 		export target_password=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} typo_db_password`
 		export target_host_with_port=`php $scriptdir/get-typo3-conf.php ${project_base_dir}/${www_dir} typo_db_host`
@@ -90,7 +90,7 @@ if [ -z "$echo_config" ]; then
 	export echo_config=1
 	echo "$scriptname: target_username:          $target_username"
 	# DISABLED FOR SECURITY
-	echo "$scriptname: target_password:          $target_password"
+	echo "$scriptname: target_password:          ********"
 	echo "$scriptname: target_host:              $target_host"
 	echo "$scriptname: target_port:              $target_port"
 	echo "$scriptname: target_database:          $target_database"
