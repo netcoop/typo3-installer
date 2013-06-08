@@ -25,6 +25,6 @@ $TYPO3_CONF_VARS['SYS']['enable_DLOG'] = 1;
 
 $TYPO3_CONF_VARS['BE']['fileCreateMask'] = '0660';
 $TYPO3_CONF_VARS['BE']['folderCreateMask'] = '2770';
-$TYPO3_CONF_VARS['BE']['createGroup'] = '$target_apache_user_group';
+$TYPO3_CONF_VARS['BE']['createGroup'] = $target_apache_user_group;
 
 ?>

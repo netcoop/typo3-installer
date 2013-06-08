@@ -16,7 +16,7 @@ $TYPO3_CONF_VARS['SYS']['forceReturnPath'] = '1';
 $TYPO3_CONF_VARS['SYS']['enableDeprecationLog'] = '0';
 $TYPO3_CONF_VARS['BE']['fileCreateMask'] = '0660';
 $TYPO3_CONF_VARS['BE']['folderCreateMask'] = '2770';
-$TYPO3_CONF_VARS['BE']['createGroup'] = '$target_apache_user_group';
+$TYPO3_CONF_VARS['BE']['createGroup'] = $target_apache_user_group;
 
 // List of extension that are automatically de-installed in this environment:
 $devOnlyExtensions = array('kickstarter', 'devlog', 'phpunit', 'extdeveval', 'extension_builder');
