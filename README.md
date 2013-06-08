@@ -28,57 +28,57 @@ How to use the TYPO3-installer?
 ===============
 
 - Create a project directory for your project on your development machine:
-
-    mkdir <project-dir>
-    cd <project-dir>
-
+```
+mkdir <project-dir>
+cd <project-dir>
+```
 - Initialize git:
-
-    git init
-
+```
+git init
+```
 - Include the TYPO3-installer as a git submodule:
-
-    git submodule add https://github.com/netcoop/typo3-installer.git installer
-
+```
+git submodule add https://github.com/netcoop/typo3-installer.git installer
+```
 - Create the required directory structure for the project:
 
 cp -a installer/example-files/empty-project-tree/. .
 
 - => If you don't already have this, create a directory src OUTSIDE OF THIS PROJECT DIRECTORY but at the same level, containing the TYPO3 sources (core)
 - Inside the sources directory, create a symlink with the major version number to the latest version of that branch, e.g.:
-
-    mkdir ../src
-    cd ../src
-    ln -s typo3_src-4.7.4 typo3_src-4.7
-    cd <project-dir>
-
+```
+mkdir ../src
+cd ../src
+ln -s typo3_src-4.7.4 typo3_src-4.7
+cd <project-dir>
+```
 - => Create a database and database user for your project
 
 - => Modify the settings in the files under config/localhost to fit your project and system (paths, database credentials, etc.)
 - Once that is done, you should be able to get the rest of your local installation ready using this command:
-
-    ./installer/local-install.sh -e localhost
-
+```
+./installer/local-install.sh -e localhost
+```
 - where localhost is the name of this configuration directory you use from the config directory
 
 - Your new empty local development site should now be up-and-running!
 - Commit your work, this is the starting point for all changes to this project:
-
-    git commit -am "Initial commit"
-
+```
+git commit -am "Initial commit"
+```
 
 Changing the TYPO3 main version
 ===============
 
 - By default the installer now uses TYPO3 4.7. To change this to 4.6 or 4.5, just change the well known setting in datasets/0.0.0/files/typo3conf/localconf.php
-
-    $TYPO3_CONF_VARS['SYS']['compat_version'] = '4.7';
-
+```
+$TYPO3_CONF_VARS['SYS']['compat_version'] = '4.7';
+```
 - and move the appropriate empty database file into the 0.0.0 dataset directory:
-
-    mv datasets/0.0.0/base_4.7.x.sql datasets/
-    mv datasets/base_4.5.x.sql datasets/0.0.0/
-
+```
+mv datasets/0.0.0/base_4.7.x.sql datasets/
+mv datasets/base_4.5.x.sql datasets/0.0.0/
+```
 - Once you have your local installation already running, then also adjust [compat_version] setting in the active localconf.php in html/typo3conf/localconf.php
 - Do this by hand, not by using the install tool (because the comments added by the install tool currently break the create-symlinks.sh script).
 
@@ -88,10 +88,10 @@ Set up SSH properties
 
 - Now create a file in your local home directory for being able to use the public/private keys with Ant SSH and SCP
 - I'm not that happy about the passphrase file, but I don't know a better way, due to limitations of ant's ssh implementation
-
-    echo -e "ssh.passphrase=<your-ssh-key-passphrase>\nssh.keyfile=\${user.home}/.ssh/id_rsa" > ~/.ssh.properties
-    chmod 600 ~/.ssh.properties
-
+```
+echo -e "ssh.passphrase=<your-ssh-key-passphrase>\nssh.keyfile=\${user.home}/.ssh/id_rsa" > ~/.ssh.properties
+chmod 600 ~/.ssh.properties
+```
 - Warning: this file should never be included in your project and/or pushed to a remote repository, as it contains your SSH passphrase!
 
 - If you use different SSH-keys for different environments, then you can choose to specify a different ssh.file.properties in the environment.properties.
@@ -120,9 +120,9 @@ Deploy to target environments
 - You can also freely add new target environments, you can also change the names of the targets as you wish.
 
 - To perform a deployment, do:
-
-    ant deploy -Denvironment=test
-
+```
+ant deploy -Denvironment=test
+```
 - where 'test' is the name of the target environment in the config directory.
 - This will transfer the necessary components (installer scripts, dataset if required and versioned files) using rsync, and run a number of scripts to apply the changes to the target environment. File transfer using rsync ensures very fast deployment once a site has already been deployed before (only changes need to be transferred).
 
