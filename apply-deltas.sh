@@ -147,6 +147,7 @@ echo -e "\n\n$scriptname: Get DB parameters:"
 echo -e "\n$scriptname: Check if CLI-user t3deploy already exists"
 
 cliuserexists=`mysql --host=$target_host --port=$target_port -u $target_username -p"$target_password" -Bse"use $target_database; select COUNT(*) from be_users where username=\"_cli_t3deploy\""`
+if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Table be_users should exist at this point, if not, exit script! Maybe you forgot to select a dataset for the first deployment? (Installation incomplete)"; exit 1; fi
 if [ $cliuserexists -eq 0 ] ; then
 	echo -e "$scriptname:     No, insert into DB:"
 	mysql_import $cli_user_file
