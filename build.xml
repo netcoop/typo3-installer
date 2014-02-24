@@ -53,6 +53,7 @@
 		<antcall target="create-backup"/>
 		<antcall target="apply-dataset"/>
 		<antcall target="rsync-files"/>
+		<antcall target="prepend-htaccess"/>
 		<antcall target="apply-symlinks"/>
 		<antcall target="apply-deltas"/>
 		<antcall target="apply-permissions"/>
@@ -263,6 +264,11 @@
 			<param name="to" value="${environment.www_dir}/" />
 			<param name="args" value="--exclude-from='.rsync-exclude' --delete --force" />
 		</antcall>
+	</target>
+
+	<target name="prepend-htaccess">
+		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
+			command="cd ${environment.project.path}${environment.www_dir} &amp;&amp; if [ -e local/config/prepend-htaccess ] ; cp local/config/prepend-htaccess .temp ; cat .htaccess &gt;&gt; .temp ; mv .temp .htaccess ; fi" />
 	</target>
 
 	<target name="apply-symlinks">
