@@ -268,7 +268,7 @@
 
 	<target name="prepend-htaccess">
 		<sshexec host="${ssh.host}" port="${ssh.port}" username="${ssh.user}" passphrase="${ssh.passphrase}" keyfile="${ssh.keyfile}"  trust="true"
-			command="cd ${environment.project.path}${environment.www_dir} &amp;&amp; if [ -e local/config/prepend-htaccess ] ; cp local/config/prepend-htaccess .temp ; cat .htaccess &gt;&gt; .temp ; mv .temp .htaccess ; fi" />
+			command="cd ${environment.project.path}/${environment.www_dir} &amp;&amp; if [ -e local/config/prepend-htaccess ] ; then cp local/config/prepend-htaccess .temp ; cat .htaccess &gt;&gt; .temp ; mv .temp .htaccess ; fi" />
 	</target>
 
 	<target name="apply-symlinks">
