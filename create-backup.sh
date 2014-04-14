@@ -121,7 +121,7 @@ fi
 
 echo "$scriptname: Creating backup directory backup/$backup_version"
 
-mkdir -p "$project_base_dir/backup/$backup_version"
+mkdir -p "$project_base_dir/backup/$backup_version/excluded-tables-structure"
 if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed create directory backup/$backup_version. Backup failed"; exit 1; fi
 
 if [ -z "$backup_name" ]; then
@@ -201,30 +201,61 @@ alltables=($(mysql --host=$target_host --port=$target_port -u $target_username -
 
 # List of database tables to exclude from database dump
 excludetables=(
+be_sessions
 cache_extensions
 cache_imagesizes
 cache_md5params
+cache_sys_dmail_stat
 cache_treelist
 cache_typo3temp_log
+cachingframework_cache_hash
+cachingframework_cache_hash_tags
+cachingframework_cache_pages
+cachingframework_cache_pagesection
+cachingframework_cache_pagesection_tags
+cachingframework_cache_pages_tags
 cf_cache_hash
 cf_cache_hash_tags
 cf_cache_pages
 cf_cache_pagesection
 cf_cache_pagesection_tags
 cf_cache_pages_tags
+cf_extbase_object
+cf_extbase_object_tags
+cf_extbase_reflection
+cf_extbase_reflection_tags
+cf_workspaces_cache
+cf_workspaces_cache_tags
 )
 
-ignoretables=""
+array_contains () {
+	local array="$1[@]"
+	local seeking=$2
+	local in=1
+	for element in "${!array}"; do
+		if [[ $element == $seeking ]]; then
+			in=0
+			break
+		fi
+	done
+	return $in
+}
+
+
 for table in "${alltables[@]}"
 do
-#	if [[ "$table" =~ ^(cache_|cf_cache_).* ]]
-#	then
-#		ignoretables="$ignoretables--ignore-table=$target_database.$table "
-#	else
-		echo "$scriptname:     dump $table"
+	# If tablename is in array excludetables, set exclude=1
+	array_contains excludetables $table && exclude=1 || exclude=0
+	if [[ $exclude -eq 0 ]]
+	then
+		echo "$scriptname:     dump: $table"
 		mysqldump --host=$target_host --port=$target_port -u $target_username -p"$target_password" --add-drop-table --default-character-set=utf8 $target_database $table > ${backup_dir}/${table}.sql
 		if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to dump database to backup directory. Backup failed"; exit 1; fi
-#	fi
+	else
+		echo "$scriptname:     exclude data, dump only structure for: $table)"
+		mysqldump --no-data --host=$target_host --port=$target_port -u $target_username -p"$target_password" --add-drop-table --default-character-set=utf8 $target_database $table > ${backup_dir}/excluded-tables-structure/${table}.sql
+		if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to dump database to backup directory. Backup failed"; exit 1; fi
+	fi
 done
 
 #echo "Ignore: $ignoretables"
@@ -237,15 +268,26 @@ done
 #echo "mysqldump --host=$target_host --port=$target_port -u $target_username -p"$target_password" --add-drop-table $ignoretables--default-character-set=utf8 $target_database > $backup_filepath.sql"
 #mysqldump --host=$target_host --port=$target_port -u $target_username -p"$target_password" $ignoretables--add-drop-table $target_database --default-character-set=utf8 > $backup_filepath.sql
 
-cd ${backup_dir}
-# Check if any .sql files exist
-if ls *.sql > /dev/null 2>&1 ; then
-	$tar -czf ${backup_filepath}.sql.tar.gz --remove-files *.sql
-	if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to compress database backups into tar.gz file. Backup failed"; exit 1; fi
-else
-	echo "$scriptname: ERROR: No database tables dumped, probably database is empty or connection error!"
-	exit 1;
-fi
+tarsqlfiles () {
+	cd $1
+	# Check if any .sql files exist
+	if ls *.sql > /dev/null 2>&1 ; then
+		$tar -czf ${backup_name}.sql.tar.gz --remove-files *.sql
+		if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to compress database backups into tar.gz file. Backup failed"; exit 1; fi
+		return 0
+	else
+		# Return exit code 1 if no files found
+		return 1
+	fi
+}
+
+tarsqlfiles "${backup_dir}"
+if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: No database tables dumped, probably database is empty or connection error!"; exit 1; fi
+
+tarsqlfiles "${backup_dir}/excluded-tables-structure"
+# If no sql-files were found, just remove the (empty) directory
+if [ "$?" -ne 0 ]; then rm -r "${backup_dir}/excluded-tables-structure"; fi
+
 
 if [ "$error" -ne 0 ]
 then
