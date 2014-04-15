@@ -285,8 +285,14 @@ tarsqlfiles "${backup_dir}"
 if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: No database tables dumped, probably database is empty or connection error!"; exit 1; fi
 
 tarsqlfiles "${backup_dir}/excluded-tables-structure"
-# If no sql-files were found, just remove the (empty) directory
-if [ "$?" -ne 0 ]; then rm -r "${backup_dir}/excluded-tables-structure"; fi
+# If no sql-files were found, just remove the (empty) directory, else rename the file
+if [ "$?" -ne 0 ]
+then
+	rm -r "${backup_dir}/excluded-tables-structure"
+else
+	mv "${backup_dir}/excluded-tables-structure/${backup_name}.sql.tar.gz" "${backup_dir}/excluded-tables-structure/${backup_name}-excluded.sql.tar.gz"
+fi
+
 
 
 if [ "$error" -ne 0 ]
