@@ -235,10 +235,12 @@ for delta in ${dirlist[@]}; do
 				# Process script deltas
 				if [ -e $deltas_path/$delta/updates.sh ]; then
 					echo "$scriptname: Execute shell script as part of update: $delta/updates.sh"
-					. $deltas_path/$delta/updates.sh
+					cd ${project_base_dir}/${www_dir}
+					. ../$deltas_path/$delta/updates.sh
 					if [ "$?" -ne 0 ]; then
 						echo "$scriptname: ERROR: could not perform scripted deltas from $deltas_path/$delta/updates.sh"
 					fi
+					cd ${project_base_dir}
 				fi
 			fi
 
