@@ -68,4 +68,8 @@ for createdir in ${createdirs[@]} ; do
 	fi
 done
 
+if [ ! -f ${www_dir}/typo3temp/index.html ] ; then
+	touch ${www_dir}/typo3temp/index.html
+fi
+
 cd $tmp
