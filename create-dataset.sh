@@ -199,7 +199,7 @@ else
 		echo "$scriptname: sql files compressed in ${dataset_name}.sql.tar.gz"
 	fi
 	cd files
-	$tar -czf ../${dataset_name}.files.tar.gz --remove-files .
+	$tar -czf ../${dataset_name}.files.tar.gz .
 	if [ "$?" -ne 0 ]; then
 		echo "$scriptname: ERROR: Failed to compress files into files.tar.gz file. Compressing dataset failed"; exit 1
 	else
