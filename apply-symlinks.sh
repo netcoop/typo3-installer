@@ -96,11 +96,12 @@ if [ "${target_version:0:1}" -ge "6" ]; then
 	cd typo3conf
 	update_symlink ../local/config/AdditionalConfiguration.php AdditionalConfiguration.php
 	cd ..
+else
+	create_symlink typo3_src/t3lib t3lib
 fi
 
 update_symlink $typo3_src_path/typo3_src-$target_version typo3_src
 create_symlink typo3_src/typo3 typo3
-create_symlink typo3_src/t3lib t3lib
 create_symlink typo3_src/index.php index.php
 
 cd $tmp
