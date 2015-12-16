@@ -13,6 +13,7 @@ usage()
 	echo "	-b <dir>  : specify project base <dir>"
 	echo "	-v <version> : version number of the backup to use for this dataset"
 	echo "		<version> can be 2, 2.0 or 2.0.1.3 - the latest available backup of this version is used"
+	echo "	-w <dirname>	: specify name of www directorybackup <dirname> ($www_dir)"
 	echo "	-f		: only copy files"
 	echo "	-d		: only import database"
 	echo "	-s		: only run update scripts (not implemented)"
@@ -145,7 +146,7 @@ do_files=1
 do_database=1
 do_scripts=1
 
-args=`getopt b:v: $*`
+args=`getopt b:v:w: $*`
 # you should not use `getopt abo: "$@"` since that would parse
 # the arguments differently from what the set command below does.
 if [ $? != 0 ]
