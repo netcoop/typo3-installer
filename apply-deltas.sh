@@ -20,11 +20,26 @@ set_project_dir()
 	cd $tmp
 }
 
+echo_line()
+{
+	echo -e "\n ---- $scriptname: "$1
+}
+
 mysql_import()
 {
 	echo "$scriptname:     Import $1 into $target_database..."
 	mysql --host=$target_host --port=$target_port -u $target_username -p"$target_password" $target_database --default-character-set=utf8 < $1
 	if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to import $1."; exit 1; fi
+}
+
+clear_cache()
+{
+	if [ -e $www_dir/typo3cms ] ; then
+		echo_line "typo3cms - clear all caches:"
+		php $www_dir/typo3cms cache:flush --force
+		if [ "$?" -ne 0 ]; then echo_line "WARNING: Failed to clear caches using typo3_console script. Installation continues."; fi
+	fi
+	rm -rf $www_dir/typo3temp/Cache
 }
 
 scriptname=$(basename $0)
@@ -116,7 +131,7 @@ if [ ! -e $data_version_file ] ; then
 	if [ ! -e $old_version_file ] ; then
 		# SET IFEMPTY CURRENT VERSION
 		echo "$initial_version" > "$data_version_file"
-		echo "$scriptname: $data_version_file set to $initial_version"
+		echo_line "$data_version_file set to $initial_version"
 	else
 		# The previous version of this script used .db.version for recording the
 		# data version.
@@ -130,46 +145,55 @@ current_version=`cat $data_version_file`
 ######################################
 #	Update database based on TCA	 #
 ######################################
-echo "$scriptname: clear TYPO3 configuration cache"
+echo_line "clear TYPO3 configuration cache"
 rm -f $project_base_dir/${www_dir}/typo3conf/temp_CACHED_*
 
-echo "$scriptname: remove all files in typo3temp (leaving directories in tact)"
-find $project_base_dir/${www_dir}/typo3temp -type f -exec rm -f '{}' +
+#echo "$scriptname: remove all files in typo3temp (leaving directories in tact)"
+#find ${www_dir}/typo3temp -type f -exec rm -f '{}' +
 #rm -rf $project_base_dir/${www_dir}/typo3temp/*
 
 
 #
 # Set MySQL Acces properties
 #
-echo -e "\n\n$scriptname: Get DB parameters:"
+echo_line "Get DB parameters:"
 . $scriptdir/get-db-config.sh -b $project_base_dir -w $www_dir
 
-echo -e "\n$scriptname: Check if CLI-user t3deploy already exists"
+echo_line "Check if CLI-user t3deploy already exists"
 
 cliuserexists=`mysql --host=$target_host --port=$target_port -u $target_username -p"$target_password" -Bse"use $target_database; select COUNT(*) from be_users where username=\"_cli_t3deploy\""`
 if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Table be_users should exist at this point, if not, exit script! Maybe you forgot to select a dataset for the first deployment? (Installation incomplete)"; exit 1; fi
 if [ $cliuserexists -eq 0 ] ; then
-	echo -e "$scriptname:     No, insert into DB:"
+	echo_line "    No, insert into DB:"
 	mysql_import $cli_user_file
 else
-	echo -e "$scriptname:     Backend user _cli_t3deploy exists."
+	echo_line "    Backend user _cli_t3deploy exists."
 fi
 
 if [ -e $devlog_table_file ] ; then
-	echo -e "$scriptname:     Create table tx_devlog if it doesn't exist yet"
+	echo_line "    Create table tx_devlog if it doesn't exist yet"
 	mysql_import $devlog_table_file
 fi
 
+#if [ -e $devlog_table_file ] ; then
+#	echo_line "    Create table tx_devlog if it doesn't exist yet"
+#	mysql_import $devlog_table_file
+#fi
+
 if [ -e $domain_record_file ] ; then
-	echo -e "$scriptname:     Create domain record"
+	echo_line "    Create domain record"
 	mysql_import $domain_record_file
 fi
 
+clear_cache
+
 COUNTER=0
 while [  $COUNTER -lt 1 ]; do
-	echo -e "\n$scriptname: t3deploy - perform TCA database updates, round [$COUNTER]:\n"
+	echo_line "t3deploy - perform TCA database updates, round [$COUNTER]:"
 	php $project_base_dir/${www_dir}/typo3/cli_dispatch.phpsh t3deploy database updateStructure --execute --allowkeymodifications
-	if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to perform TCA database updates. Installation incomplete"; exit 1; fi
+#	echo -e "\n$scriptname: typo3cms database:updateschema *.add,*.change, round [$COUNTER]:\n"
+#	php $project_base_dir/${www_dir}/typo3cms database:updateschema "*.add,*.change"
+	if [ "$?" -ne 0 ]; then echo_line "ERROR: Failed to perform TCA database updates. Installation incomplete"; exit 1; fi
 	let COUNTER=COUNTER+1
 done
 
@@ -189,7 +213,7 @@ cd $tmp
 #
 function version { echo "$@" | awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'; }
 
-echo "$scriptname: Current version: $current_version ($(version $current_version))"
+echo_line "Current version: $current_version ($(version $current_version))"
 
 for delta in ${dirlist[@]}; do
 
@@ -219,7 +243,7 @@ for delta in ${dirlist[@]}; do
 						exit 1
 					fi
 				else
-					echo "$scriptname:     NOT FOUND: patch SQL for update: $delta not found";
+					echo_line "    NOT FOUND: patch SQL for update: $delta not found";
 				fi
 			fi
 
@@ -238,7 +262,7 @@ for delta in ${dirlist[@]}; do
 					cd ${project_base_dir}/${www_dir}
 					. ../$deltas_path/$delta/updates.sh
 					if [ "$?" -ne 0 ]; then
-						echo "$scriptname: ERROR: could not perform scripted deltas from $deltas_path/$delta/updates.sh"
+						echo_line "ERROR: could not perform scripted deltas from $deltas_path/$delta/updates.sh"
 					fi
 					cd ${project_base_dir}
 				fi
@@ -264,9 +288,15 @@ current_version=`cat $data_version_file`
 # Clear configuration cache & all caches #
 ###################################
 
-echo -e "\n$scriptname: t3deploy - clear configuration cache and all caches:\n"
-php ${project_base_dir}/${www_dir}/typo3/cli_dispatch.phpsh t3deploy cache clearCache --temp_CACHED --all
-if [ "$?" -ne 0 ]; then echo "$scriptname: WARNING: Failed to clear caches using t3deploy. Installation continues."; fi
+#echo -e "\n$scriptname: typo3cms - update reference index:\n"
+#php $www_dir/typo3cms cleanup:updatereferenceindex --verbose
+#if [ "$?" -ne 0 ]; then echo "$scriptname: WARNING: Failed to update reference index. Installation continues."; fi
+
+clear_cache
+
+#echo -e "\n$scriptname: typo3cms - warm up caches:"
+#php $www_dir/typo3cms cache:warmup
+#if [ "$?" -ne 0 ]; then echo_line "WARNING: Failed to warm-up caches using typo3_console script. Installation continues."; fi
 
 
 ###################################
@@ -276,10 +306,10 @@ if [ "$?" -ne 0 ]; then echo "$scriptname: WARNING: Failed to clear caches using
 if [ "$increase_db_cursor" -eq 1 ] ; then
 
 	if [ -e $cursor_file ] ; then
-		echo "$scriptname: Raise database cursor for remote deployment"
+		echo_line "Raise database cursor for remote deployment"
 		mysql_import $cursor_file
 	else
-		echo "$scriptname: WARNING: $cursor_file does not exist, continue anyway...."
+		echo_line "WARNING: $cursor_file does not exist, continue anyway...."
 	fi
 
 fi
