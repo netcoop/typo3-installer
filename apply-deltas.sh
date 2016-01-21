@@ -38,7 +38,10 @@ clear_cache()
 		echo_line "typo3cms - clear all caches:"
 		php $www_dir/typo3cms cache:flush --force
 		if [ "$?" -ne 0 ]; then echo_line "WARNING: Failed to clear caches using typo3_console script. Installation continues."; fi
+	else
+		echo_line "WARNING: Did not find typo3_console script 'typo3cms', only clearing Cache folder in typo3temp"
 	fi
+
 	rm -rf $www_dir/typo3temp/Cache
 }
 
