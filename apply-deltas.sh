@@ -22,26 +22,39 @@ set_project_dir()
 
 echo_line()
 {
-	echo -e "\n ---- $scriptname: "$1
+	echo -e "$1"
+}
+
+echo_separator_line()
+{
+	echo -e "\n---- $scriptname ----\n$1"
 }
 
 mysql_import()
 {
-	echo "$scriptname:     Import $1 into $target_database..."
+	echo_line "Import $1 into $target_database..."
 	mysql --host=$target_host --port=$target_port -u $target_username -p"$target_password" $target_database --default-character-set=utf8 < $1
 	if [ "$?" -ne 0 ]; then echo "$scriptname: ERROR: Failed to import $1."; exit 1; fi
 }
 
 clear_cache()
 {
-	if [ -e $www_dir/typo3cms ] ; then
-		echo_line "typo3cms - clear all caches:"
+	echo_separator_line "Clear all caches"
+	trynextmethod=1
+	if [ -e "$www_dir/typo3cms" ] ; then
 		php $www_dir/typo3cms cache:flush --force
-		if [ "$?" -ne 0 ]; then echo_line "WARNING: Failed to clear caches using typo3_console script. Installation continues."; fi
-	else
-		echo_line "WARNING: Did not find typo3_console script 'typo3cms', only clearing Cache folder in typo3temp"
+		trynextmethod=$?
+		if [ "$trynextmethod" -eq 0 ]; then echo_line "Successfully cleared all caches using Typo3_console"; fi
 	fi
-
+	if [ "$trynextmethod" -ne 0 ] ; then
+		php ${project_base_dir}/${www_dir}/typo3/cli_dispatch.phpsh t3deploy cache clearCache --temp_CACHED --all
+		if [ "$?" -ne 0 ]; then
+			echo_line "WARNING: Failed to clear caches using typo3_console AND t3deploy. Installation continues."
+		else
+			echo_line "Successfully cleared all caches using t3deploy"
+		fi
+	fi
+	echo_line "Clearing Cache folder in typo3temp"
 	rm -rf $www_dir/typo3temp/Cache
 }
 
@@ -148,7 +161,7 @@ current_version=`cat $data_version_file`
 ######################################
 #	Update database based on TCA	 #
 ######################################
-echo_line "clear TYPO3 configuration cache"
+echo_separator_line "Clear TYPO3 4.5 configuration cache, if there is any"
 rm -f $project_base_dir/${www_dir}/typo3conf/temp_CACHED_*
 
 #echo "$scriptname: remove all files in typo3temp (leaving directories in tact)"
@@ -159,7 +172,7 @@ rm -f $project_base_dir/${www_dir}/typo3conf/temp_CACHED_*
 #
 # Set MySQL Acces properties
 #
-echo_line "Get DB parameters:"
+echo_separator_line "Get DB parameters:"
 . $scriptdir/get-db-config.sh -b $project_base_dir -w $www_dir
 
 echo_line "Check if CLI-user t3deploy already exists"
@@ -190,9 +203,10 @@ fi
 
 clear_cache
 
+echo_separator_line "t3deploy - Perform TCA database updates"
 COUNTER=0
 while [  $COUNTER -lt 1 ]; do
-	echo_line "t3deploy - perform TCA database updates, round [$COUNTER]:"
+	echo_line "Database updates, round [$COUNTER]:"
 	php $project_base_dir/${www_dir}/typo3/cli_dispatch.phpsh t3deploy database updateStructure --execute --allowkeymodifications
 #	echo -e "\n$scriptname: typo3cms database:updateschema *.add,*.change, round [$COUNTER]:\n"
 #	php $project_base_dir/${www_dir}/typo3cms database:updateschema "*.add,*.change"
@@ -216,7 +230,7 @@ cd $tmp
 #
 function version { echo "$@" | awk -F. '{ printf("%d%03d%03d\n", $1,$2,$3); }'; }
 
-echo_line "Current version: $current_version ($(version $current_version))"
+echo_separator_line "Current version: $current_version ($(version $current_version))"
 
 for delta in ${dirlist[@]}; do
 
@@ -307,9 +321,8 @@ clear_cache
 ###################################
 
 if [ "$increase_db_cursor" -eq 1 ] ; then
-
+	echo_separator_line "Raise database cursor for remote deployment"
 	if [ -e $cursor_file ] ; then
-		echo_line "Raise database cursor for remote deployment"
 		mysql_import $cursor_file
 	else
 		echo_line "WARNING: $cursor_file does not exist, continue anyway...."
