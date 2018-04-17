@@ -24,7 +24,9 @@ if (isset($argv[1])) {
 		if (file_exists($webroot . '/typo3conf/LocalConfiguration.php')) {
 			// TYPO3 version >= 6.0
 			$GLOBALS['TYPO3_CONF_VARS'] = require($webroot . '/typo3conf/LocalConfiguration.php');
-			@include($webroot . '/typo3conf/AdditionalConfiguration.php');
+			if (file_exists($webroot . '/typo3conf/AdditionalConfiguration.php')) {
+				include($webroot . '/typo3conf/AdditionalConfiguration.php');
+			}
 		} elseif (file_exists($webroot . '/local/config/AdditionalConfiguration.php')) {
 			include($webroot . '/local/config/AdditionalConfiguration.php');
 		} elseif (file_exists($webroot . '/typo3conf/localconf.php')) {
